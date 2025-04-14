@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from models import init_orm, close_orm
+from db.models import init_orm, close_orm
 
 
 @asynccontextmanager
