@@ -1,0 +1,9 @@
+import os
+
+POSTGRES_DB = os.getenv("POSTGRES_DB", "rest_fastapi")
+POSTGRES_HOST = os.getenv("POSTGRES_HOST", "localhost")
+POSTGRES_PORT = os.getenv("POSTGRES_PORT", "5432")
+POSTGRES_USER = os.getenv("POSTGRES_USER", "app")
+POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "secret")
+
+PG_DSN = f"postgresql+asyncpg://{POSTGRES_USER}:{POSTGRES_PASSWORD}@localhost:5431/{POSTGRES_DB}"
