@@ -15,3 +15,7 @@ async def get_adv_by_id(session: AsyncSession, adv_orm_cls: ORM_OBJ_ADV_CLS, adv
         raise HTTPException(404, detail="Advertisement not found")
     return adv_orm_obj
 
+async def delete_adv(session: AsyncSession, adv: ORM_OBJ_ADV_CLS):
+    await session.delete(adv)
+    await session.commit()
+
