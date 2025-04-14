@@ -2,10 +2,12 @@ from fastapi import FastAPI
 from schema import (CreateAdvRequest, UpdateAdvRequest, CreateAdvResponse,
                     GetAdvResponse, SearchAdvResponse, UpdateAdvResponse,
                     DeleteAdvResponse)
+from lifespan import lifespan
 
 app = FastAPI(
     title="Purchase and Sale Service",
     description="List of advertisements",
+    lifespan=lifespan
 )
 
 
