@@ -39,9 +39,10 @@ async def get_advertisement(adv_id: int, session: SessionDependency):
 @app.get("/api/v1/advertisement/{adv_id}?{query_string}",
          tags=["advertisements"],
          response_model=SearchAdvResponse)
-async def search_advertisement(title: str = None, description: str = None,
+async def search_advertisement(session: SessionDependency,
+                               title: str = None, description: str = None,
                                price: float = None, author: str = None,
-                               session: SessionDependency):
+                               ):
     query = (
         select(models.Advertisement)
         .where(models.Advertisement.title == title,
