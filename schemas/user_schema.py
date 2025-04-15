@@ -6,7 +6,6 @@ from typing import Literal
 class CreateUserRequest(BaseModel):
     username: str
     password: str
-    created_at: datetime
 
 
 class CreateUserResponse(BaseModel):
