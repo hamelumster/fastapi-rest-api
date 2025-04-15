@@ -62,17 +62,17 @@ async def update_advertisement(adv_id: int,
                                adv_data: UpdateAdvRequest,
                                session: SessionDependency):
 
-    # adv_orm_obj = await get_adv_by_id(session, models.Advertisement, adv_id)
-    # adv_dict = adv_data.model_dump(exclude_unset=True)
-    #
-    # if adv_dict.get("title"):
-    #     adv_orm_obj.title = adv_dict["title"]
-    # if adv_dict.get("description"):
-    #     adv_orm_obj.description = adv_dict["description"]
-    # if adv_dict.get("price"):
-    #     adv_orm_obj.price = adv_dict["price"]
-    # await add_advertisement(session, adv_orm_obj)
-    # return SUCCESS_RESPONSE # adv_orm_obj.to_dict
+    adv_orm_obj = await get_adv_by_id(session, models.Advertisement, adv_id)
+    adv_dict = adv_data.model_dump(exclude_unset=True)
+
+    if adv_dict.get("title"):
+        adv_orm_obj.title = adv_dict["title"]
+    if adv_dict.get("description"):
+        adv_orm_obj.description = adv_dict["description"]
+    if adv_dict.get("price"):
+        adv_orm_obj.price = adv_dict["price"]
+    await add_advertisement(session, adv_orm_obj)
+    return SUCCESS_RESPONSE # adv_orm_obj.to_dict
 
 
 
