@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from sqlalchemy import select
 
+from constants import SUCCESS_RESPONSE
 from db import models
 from schema import (CreateAdvRequest, UpdateAdvRequest, CreateAdvResponse,
                     GetAdvResponse, SearchAdvResponse, UpdateAdvResponse,
@@ -65,5 +66,7 @@ async def update_advertisement(adv_id: int, adv_data: UpdateAdvRequest):
 @app.delete("/api/v1/advertisement/{adv_id}",
             tags=["advertisements"],
             response_model=DeleteAdvResponse)
-async def delete_advertisement(adv_id: int):
-    return {"message": "Hello World"}
+async def delete_advertisement(adv_id: int, session: SessionDependency):
+    adv_orm_obj = await get_adv_by_id(session, models.Advertisement, adv_id)
+    await session.delete(adv_orm_obj)
+    return SUCCESS_RESPONSE
