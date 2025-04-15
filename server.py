@@ -24,14 +24,15 @@ async def create_advertisement(adv: CreateAdvRequest, session: SessionDependency
     adv_dict = adv.model_dump(exclude_unset=True)
     adv_orm_obj = models.Advertisement(**adv_dict)
     await add_advertisement(session, adv_orm_obj)
-    return adv_orm_obj.id_dict 
+    return adv_orm_obj.id_dict
 
 
 @app.get("/api/v1/advertisement/{adv_id}",
          tags=["advertisements"],
          response_model=GetAdvResponse)
-async def get_advertisement(adv_id: int):
-    return {"message": "Hello World"}
+async def get_advertisement(adv_id: int, session: SessionDependency):
+    adv_orm_obj = await get_adv_by_id(session, models.Advertisement, adv_id)
+    return adv_orm_obj.to_dict
 
 
 @app.get("/api/v1/advertisement/{adv_id}?{query_string}",
