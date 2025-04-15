@@ -8,7 +8,6 @@ class CreateAdvRequest(BaseModel):
     description: str
     price: float
     author: str
-    created_at: datetime
 
 
 class UpdateAdvRequest(BaseModel):
