@@ -3,6 +3,10 @@ from schema import (CreateAdvRequest, UpdateAdvRequest, CreateAdvResponse,
                     GetAdvResponse, SearchAdvResponse, UpdateAdvResponse,
                     DeleteAdvResponse)
 from lifespan import lifespan
+from dependency import SessionDependency
+from crud.crud_user import get_user_by_id, add_user
+from crud.crud_advertisement import get_adv_by_id, add_advertisement
+
 
 app = FastAPI(
     title="Purchase and Sale Service",
@@ -14,7 +18,7 @@ app = FastAPI(
 @app.post("/api/v1/advertisement/",
           tags=["advertisements"],
           response_model=CreateAdvResponse)
-async def create_advertisement(adv: CreateAdvRequest):
+async def create_advertisement(adv: CreateAdvRequest, session: SessionDependency):
     return {"message": "Hello World"}
 
 
