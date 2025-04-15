@@ -2,10 +2,10 @@ from fastapi import HTTPException
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.models import ORM_OBJ_USR_CLS
+from db.models import ORM_OBJ_USR_CLS, ORM_OBJ_USR
 
 
-async def add_user(session: AsyncSession, user: ORM_OBJ_USR_CLS):
+async def add_user(session: AsyncSession, user: ORM_OBJ_USR):
     session.add(user)
     try:
         await session.commit()
