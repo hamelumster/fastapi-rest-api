@@ -3,9 +3,9 @@ from sqlalchemy import select
 
 from constants import SUCCESS_RESPONSE
 from db import models
-from schema import (CreateAdvRequest, UpdateAdvRequest, CreateAdvResponse,
-                    GetAdvResponse, SearchAdvResponse, UpdateAdvResponse,
-                    DeleteAdvResponse)
+from schemas.user_schema import (CreateUserRequest, CreateUserResponse, GetUserResponse, SuccessUserResponse)
+from schemas.adv_schema import (CreateAdvRequest, UpdateAdvRequest, CreateAdvResponse,
+                                GetAdvResponse, SearchAdvResponse, UpdateAdvResponse, DeleteAdvResponse)
 from lifespan import lifespan
 from dependency import SessionDependency
 from crud.crud_user import get_user_by_id, add_user
