@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from sqlalchemy import select
 
 from constants import SUCCESS_RESPONSE
@@ -36,6 +36,13 @@ async def get_user(user_id: int, session: SessionDependency):
           tags=["advertisements"],
           response_model=CreateAdvResponse)
 async def create_advertisement(adv: CreateAdvRequest, session: SessionDependency):
+    # Проверка на существование пользователя
+    user_from_db = select(models.User).where(models.User.username == adv.author)
+    result = await session.execute(user_from_db)
+    user = result.scalar_one_or_none()
+    if user is None:
+        raise HTTPException(404, detail=f"User {adv.author} not found")
+
     adv_dict = adv.model_dump(exclude_unset=True)
     adv_orm_obj = models.Advertisement(**adv_dict)
     await add_advertisement(session, adv_orm_obj)
@@ -57,6 +64,10 @@ async def search_advertisement(session: SessionDependency,
                                title: str = None, description: str = None,
                                price: float = None, author: str = None,
                                ):
+
+    if not title and not description and not price and not author:
+        raise HTTPException(422, detail="For search you need to enter at least one parameter")
+
     query = (
         select(models.Advertisement)
         .where(models.Advertisement.title == title,
@@ -67,7 +78,6 @@ async def search_advertisement(session: SessionDependency,
     )
     advs = await session.scalars(query)
     return {"results": [adv.to_dict for adv in advs]}
-
 
 
 @app.patch("/api/v1/advertisement/{adv_id}",
