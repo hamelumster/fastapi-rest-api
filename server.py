@@ -18,6 +18,20 @@ app = FastAPI(
 )
 
 
+@app.post("/api/v1/user/", tags=["users"], response_model=CreateUserResponse)
+async def create_user(user: CreateUserRequest, session: SessionDependency):
+    user_dict = user.model_dump(exclude_unset=True)
+    user_orm_obj = models.User(**user_dict)
+    await add_user(session, user_orm_obj)
+    return user_orm_obj.id_dict
+
+
+@app.get("/api/v1/user/{user_id}", tags=["users"], response_model=GetUserResponse)
+async def get_user(user_id: int, session: SessionDependency):
+    user_orm_obj = await get_user_by_id(session, models.User, user_id)
+    return user_orm_obj.to_dict
+
+
 @app.post("/api/v1/advertisement/",
           tags=["advertisements"],
           response_model=CreateAdvResponse)
