@@ -2,9 +2,9 @@ from sqlalchemy import ForeignKey, DateTime, func, Integer, String, Float
 from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
-import Config
+import db.Config
 
-engine = create_async_engine(Config.PG_DSN)
+engine = create_async_engine(db.Config.PG_DSN)
 Session = async_sessionmaker(engine, expire_on_commit=False)
 
 class Base(DeclarativeBase, AsyncAttrs):
