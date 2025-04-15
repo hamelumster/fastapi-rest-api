@@ -30,6 +30,18 @@ from pprint import pprint
 
 
 # Получение объявления
-get_adv = requests.get("http://127.0.0.1:8000/api/v1/advertisement/4")
-print(get_adv.status_code)
-pprint(get_adv.json())
+# get_adv = requests.get("http://127.0.0.1:8000/api/v1/advertisement/10")
+# print(get_adv.status_code)
+# pprint(get_adv.json())
+
+
+# Обновление объявления
+update_adv = requests.patch(
+    "http://127.0.0.1:8000/api/v1/advertisement/10",
+    json={"title": "shoes",
+          "description": "very good shoes, its true",
+          "price": 1111,
+          "author": "user_4"}
+)
+print(update_adv.status_code)
+pprint(update_adv.json())
