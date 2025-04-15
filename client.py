@@ -36,12 +36,18 @@ from pprint import pprint
 
 
 # Обновление объявления
-update_adv = requests.patch(
-    "http://127.0.0.1:8000/api/v1/advertisement/10",
-    json={"title": "shoes",
-          "description": "very good shoes, its true",
-          "price": 1111,
-          "author": "user_4"}
-)
-print(update_adv.status_code)
-pprint(update_adv.json())
+# update_adv = requests.patch(
+#     "http://127.0.0.1:8000/api/v1/advertisement/10",
+#     json={"title": "shoes",
+#           "description": "very good shoes, its true",
+#           "price": 1111,
+#           "author": "user_4"}
+# )
+# print(update_adv.status_code)
+# pprint(update_adv.json())
+
+
+# Удаление объявления
+delete_adv = requests.delete("http://127.0.0.1:8000/api/v1/advertisement/10")
+print(delete_adv.status_code)
+pprint(delete_adv.json())
