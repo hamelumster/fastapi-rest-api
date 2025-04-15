@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from sqlalchemy import select
 
 from db import models
 from schema import (CreateAdvRequest, UpdateAdvRequest, CreateAdvResponse,
@@ -39,8 +40,19 @@ async def get_advertisement(adv_id: int, session: SessionDependency):
          tags=["advertisements"],
          response_model=SearchAdvResponse)
 async def search_advertisement(title: str = None, description: str = None,
-                               price: float = None, author: str = None):
-    return {"message": "Hello World"}
+                               price: float = None, author: str = None,
+                               session: SessionDependency):
+    query = (
+        select(models.Advertisement)
+        .where(models.Advertisement.title == title,
+              models.Advertisement.description == description,
+              models.Advertisement.price == price,
+              models.Advertisement.author == author)
+        .limit(10000)
+    )
+    advs = await session.scalars(query)
+    return {"results": [adv.to_dict for adv in advs]}
+
 
 
 @app.patch("/api/v1/advertisement/{adv_id}",
