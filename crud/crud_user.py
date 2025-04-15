@@ -10,7 +10,8 @@ async def add_user(session: AsyncSession, user: ORM_OBJ_USR):
     try:
         await session.commit()
     except IntegrityError:
-        HTTPException(409, detail="User already exists")
+        await session.rollback()
+        raise HTTPException(409, detail="User already exists")
 
 async def get_user_by_id(session: AsyncSession, user_orm_cls: ORM_OBJ_USR_CLS, user_id: int):
     user_orm_obj = await session.get(user_orm_cls, user_id)
