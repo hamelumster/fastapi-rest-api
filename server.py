@@ -1,4 +1,6 @@
 from fastapi import FastAPI
+
+from db import models
 from schema import (CreateAdvRequest, UpdateAdvRequest, CreateAdvResponse,
                     GetAdvResponse, SearchAdvResponse, UpdateAdvResponse,
                     DeleteAdvResponse)
@@ -19,7 +21,10 @@ app = FastAPI(
           tags=["advertisements"],
           response_model=CreateAdvResponse)
 async def create_advertisement(adv: CreateAdvRequest, session: SessionDependency):
-    return {"message": "Hello World"}
+    adv_dict = adv.model_dump(exclude_unset=True)
+    adv_orm_obj = models.Advertisement(**adv_dict)
+    await add_advertisement(session, adv_orm_obj)
+    return adv_orm_obj.id_dict 
 
 
 @app.get("/api/v1/advertisement/{adv_id}",
