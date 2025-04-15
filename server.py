@@ -9,8 +9,7 @@ from schema import (CreateAdvRequest, UpdateAdvRequest, CreateAdvResponse,
 from lifespan import lifespan
 from dependency import SessionDependency
 from crud.crud_user import get_user_by_id, add_user
-from crud.crud_advertisement import get_adv_by_id, add_advertisement
-
+from crud.crud_advertisement import get_adv_by_id, add_advertisement, delete_adv
 
 app = FastAPI(
     title="Purchase and Sale Service",
@@ -59,8 +58,22 @@ async def search_advertisement(title: str = None, description: str = None,
 @app.patch("/api/v1/advertisement/{adv_id}",
            tags=["advertisements"],
            response_model=UpdateAdvResponse)
-async def update_advertisement(adv_id: int, adv_data: UpdateAdvRequest):
-    return {"message": "Hello World"}
+async def update_advertisement(adv_id: int,
+                               adv_data: UpdateAdvRequest,
+                               session: SessionDependency):
+
+    # adv_orm_obj = await get_adv_by_id(session, models.Advertisement, adv_id)
+    # adv_dict = adv_data.model_dump(exclude_unset=True)
+    #
+    # if adv_dict.get("title"):
+    #     adv_orm_obj.title = adv_dict["title"]
+    # if adv_dict.get("description"):
+    #     adv_orm_obj.description = adv_dict["description"]
+    # if adv_dict.get("price"):
+    #     adv_orm_obj.price = adv_dict["price"]
+    # await add_advertisement(session, adv_orm_obj)
+    # return SUCCESS_RESPONSE # adv_orm_obj.to_dict
+
 
 
 @app.delete("/api/v1/advertisement/{adv_id}",
@@ -68,5 +81,5 @@ async def update_advertisement(adv_id: int, adv_data: UpdateAdvRequest):
             response_model=DeleteAdvResponse)
 async def delete_advertisement(adv_id: int, session: SessionDependency):
     adv_orm_obj = await get_adv_by_id(session, models.Advertisement, adv_id)
-    await session.delete(adv_orm_obj)
+    await delete_adv(session, adv_orm_obj)
     return SUCCESS_RESPONSE
