@@ -57,25 +57,32 @@ async def get_advertisement(adv_id: int, session: SessionDependency):
     return adv_orm_obj.to_dict
 
 
-@app.get("/api/v1/advertisement/{adv_id}?{query_string}",
+@app.get("/api/v1/advertisement",
          tags=["advertisements"],
          response_model=SearchAdvResponse)
 async def search_advertisement(session: SessionDependency,
                                title: str = None, description: str = None,
-                               price: float = None, author: str = None,
-                               ):
+                               price: float = None, author: str = None):
+    # Если не введен ни один из параметров, то вернем пустой список
+    if not (title or description or price or author):
+        return {"results": []}
 
-    if not title and not description and not price and not author:
-        raise HTTPException(422, detail="For search you need to enter at least one parameter")
+    conditions = []
 
-    query = (
-        select(models.Advertisement)
-        .where(models.Advertisement.title == title,
-              models.Advertisement.description == description,
-              models.Advertisement.price == price,
-              models.Advertisement.author == author)
-        .limit(10000)
-    )
+    if title:
+        conditions.append(models.Advertisement.title == title)
+    if description:
+        conditions.append(models.Advertisement.description == description)
+    if price:
+        conditions.append(models.Advertisement.price == price)
+    if author:
+        conditions.append(models.Advertisement.author == author)
+
+    query = select(models.Advertisement)
+    if conditions:
+        query = query.where(*conditions)
+    query = query.limit(10000)
+
     advs = await session.scalars(query)
     return {"results": [adv.to_dict for adv in advs]}
 
@@ -97,7 +104,7 @@ async def update_advertisement(adv_id: int,
     if adv_dict.get("price"):
         adv_orm_obj.price = adv_dict["price"]
     await add_advertisement(session, adv_orm_obj)
-    return SUCCESS_RESPONSE # adv_orm_obj.to_dict
+    return SUCCESS_RESPONSE
 
 
 
