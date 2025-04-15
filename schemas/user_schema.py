@@ -15,7 +15,6 @@ class CreateUserResponse(BaseModel):
 class GetUserResponse(BaseModel):
     id: int
     username: str
-    created_at: datetime
 
 
 class SuccessUserResponse(BaseModel):
