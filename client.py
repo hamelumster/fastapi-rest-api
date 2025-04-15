@@ -48,6 +48,19 @@ from pprint import pprint
 
 
 # Удаление объявления
-delete_adv = requests.delete("http://127.0.0.1:8000/api/v1/advertisement/10")
-print(delete_adv.status_code)
-pprint(delete_adv.json())
+# delete_adv = requests.delete("http://127.0.0.1:8000/api/v1/advertisement/10")
+# print(delete_adv.status_code)
+# pprint(delete_adv.json())
+
+
+# Поиск объявления
+# Раскомментировать параметры по необходимости
+search_adv = requests.get(
+    "http://127.0.0.1:8000/api/v1/advertisement",
+    params={# "title": "shoes",
+            # "description": "very good shoes, its true",
+            # "price": 1000,
+            # "author": "user_4"
+            })
+print(search_adv.status_code)
+pprint(search_adv.json())
