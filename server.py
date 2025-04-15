@@ -3,13 +3,14 @@ from sqlalchemy import select
 
 from constants import SUCCESS_RESPONSE
 from db import models
-from schemas.user_schema import (CreateUserRequest, CreateUserResponse, GetUserResponse, SuccessUserResponse)
+from schemas.user_schema import (CreateUserRequest, CreateUserResponse, GetUserResponse)
 from schemas.adv_schema import (CreateAdvRequest, UpdateAdvRequest, CreateAdvResponse,
                                 GetAdvResponse, SearchAdvResponse, UpdateAdvResponse, DeleteAdvResponse)
 from lifespan import lifespan
 from dependency import SessionDependency
 from crud.crud_user import get_user_by_id, add_user
 from crud.crud_advertisement import get_adv_by_id, add_advertisement, delete_adv
+
 
 app = FastAPI(
     title="Purchase and Sale Service",
@@ -93,7 +94,6 @@ async def search_advertisement(session: SessionDependency,
 async def update_advertisement(adv_id: int,
                                adv_data: UpdateAdvRequest,
                                session: SessionDependency):
-
     adv_orm_obj = await get_adv_by_id(session, models.Advertisement, adv_id)
     adv_dict = adv_data.model_dump(exclude_unset=True)
 
@@ -105,7 +105,6 @@ async def update_advertisement(adv_id: int,
         adv_orm_obj.price = adv_dict["price"]
     await add_advertisement(session, adv_orm_obj)
     return SUCCESS_RESPONSE
-
 
 
 @app.delete("/api/v1/advertisement/{adv_id}",
