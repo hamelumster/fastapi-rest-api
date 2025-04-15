@@ -1,10 +1,10 @@
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.models import ORM_OBJ_ADV_CLS
+from db.models import ORM_OBJ_ADV_CLS, ORM_OBJ_ADV
 
 
-async def add_advertisement(session: AsyncSession, adv: ORM_OBJ_ADV_CLS):
+async def add_advertisement(session: AsyncSession, adv: ORM_OBJ_ADV):
     session.add(adv)
     await session.commit()
 
