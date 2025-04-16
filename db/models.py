@@ -39,7 +39,7 @@ class Advertisement(Base):
     author_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
     created_at: Mapped[str] = mapped_column(DateTime, server_default=func.now())
 
-    user = relationship("User", back_populates="advertisements")
+    user = relationship("User", back_populates="advertisements", lazy="selectin")
 
     @property
     def to_dict(self):
