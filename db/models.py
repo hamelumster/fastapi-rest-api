@@ -18,7 +18,7 @@ class User(Base):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    username: Mapped[str] = mapped_column(String, unique=True)
+    username: Mapped[str] = mapped_column(String, unique=True, index=True, nullable=False)
     password: Mapped[str] = mapped_column(String, nullable=False)
     created_at: Mapped[str] = mapped_column(DateTime, server_default=func.now())
 
@@ -36,7 +36,7 @@ class Advertisement(Base):
     title: Mapped[str] = mapped_column(String, index=True, nullable=False)
     description: Mapped[str] = mapped_column(String, nullable=False)
     price: Mapped[float] = mapped_column(Float, nullable=False)
-    author: Mapped[str] = mapped_column(ForeignKey("users.username"))
+    author_id: Mapped[str] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
     created_at: Mapped[str] = mapped_column(DateTime, server_default=func.now())
 
     user = relationship("User", back_populates="advertisements")
@@ -48,7 +48,7 @@ class Advertisement(Base):
             "title": self.title,
             "description": self.description,
             "price": self.price,
-            "author": self.author,
+            "author": self.user.username if self.user else None,
             "created_at": self.created_at.isoformat(),
         }
 
