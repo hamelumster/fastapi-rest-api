@@ -37,18 +37,13 @@ async def get_user(user_id: int, session: SessionDependency):
           tags=["advertisements"],
           response_model=CreateAdvResponse)
 async def create_advertisement(user_id: int, adv: CreateAdvRequest, session: SessionDependency):
-    # Проверка на существование пользователя
-    user_from_db = select(User.username).where(User.id == user_id)
-    result = await session.execute(user_from_db)
-    user = result.scalar_one_or_none()
-    if user is None:
-        raise HTTPException(403, detail=f"User with id {user_id} not found")
+    user = await get_user_by_id(session, User, user_id)
 
     adv_dict = adv.model_dump(exclude_unset=True)
-    adv_dict["author"] = user_from_db
+    adv_dict["author_id"] = user.id
     adv_orm_obj = Advertisement(**adv_dict)
     await add_advertisement(session, adv_orm_obj)
-    return adv_orm_obj.id_dict
+    return adv_orm_obj.to_dict
 
 
 @app.get("/api/v1/advertisement/{adv_id}",
@@ -69,22 +64,18 @@ async def search_advertisement(session: SessionDependency,
     if not (title or description or price or author):
         return {"results": []}
 
-    conditions = []
+    query = select(Advertisement)
 
     if title:
-        conditions.append(Advertisement.title == title)
+        query = query.where(Advertisement.title == title)
     if description:
-        conditions.append(Advertisement.description == description)
+        query = query.where(Advertisement.description == description)
     if price:
-        conditions.append(Advertisement.price == price)
+        query = query.where(Advertisement.price == price)
     if author:
-        conditions.append(Advertisement.author == author)
+        query = query.join(Advertisement.user).where(User.username == author)
 
-    query = select(Advertisement)
-    if conditions:
-        query = query.where(*conditions)
     query = query.limit(10000)
-
     advs = await session.scalars(query)
     return {"results": [adv.to_dict for adv in advs]}
 
@@ -93,9 +84,16 @@ async def search_advertisement(session: SessionDependency,
            tags=["advertisements"],
            response_model=UpdateAdvResponse)
 async def update_advertisement(adv_id: int,
+                               user_id: int,
                                adv_data: UpdateAdvRequest,
                                session: SessionDependency):
+    # Проверка на сущестование пользователя
+    user = await get_user_by_id(session, User, user_id)
     adv_orm_obj = await get_adv_by_id(session, Advertisement, adv_id)
+
+    if adv_orm_obj.author_id != user.id:
+        raise HTTPException(404, detail=f"User is not author of advertisement!")
+
     adv_dict = adv_data.model_dump(exclude_unset=True)
 
     if adv_dict.get("title"):
