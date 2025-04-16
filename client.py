@@ -17,14 +17,14 @@ from pprint import pprint
 # print(get_user.json())
 
 
-# Создание объявления
+# Создание объявления (в параметрах передается айди пользователя)
 # create_adv = requests.post(
 #     "http://127.0.0.1:8000/api/v1/advertisement/",
+#     params={"user_id": 4},
 #     json={"title": "shoes",
 #           "description": "very good shoes",
-#           "price": 1000,
-#           "author": "user_4"}
-# )
+#           "price": 1000
+#           })
 # print(create_adv.status_code)
 # print(create_adv.json())
 
@@ -55,12 +55,12 @@ from pprint import pprint
 
 # Поиск объявления
 # Раскомментировать параметры по необходимости
-search_adv = requests.get(
-    "http://127.0.0.1:8000/api/v1/advertisement",
-    params={# "title": "shoes",
-            # "description": "very good shoes, its true",
-            # "price": 1000,
-            # "author": "user_4"
-            })
-print(search_adv.status_code)
-pprint(search_adv.json())
+# search_adv = requests.get(
+#     "http://127.0.0.1:8000/api/v1/advertisement",
+#     params={# "title": "shoes",
+#             # "description": "very good shoes, its true",
+#             # "price": 1000,
+#             "author": "user_4"
+#             })
+# print(search_adv.status_code)
+# pprint(search_adv.json())
