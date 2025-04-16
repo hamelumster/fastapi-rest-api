@@ -1,4 +1,8 @@
+clone repo:
+
+```bash
 git clone git@github.com:hamelumster/fastapi-rest-api.git
+```
 
 to run locally:
 
