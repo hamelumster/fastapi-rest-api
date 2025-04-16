@@ -6,8 +6,8 @@ from db.models import User, Advertisement
 from schemas.user_schema import (CreateUserRequest, CreateUserResponse, GetUserResponse)
 from schemas.adv_schema import (CreateAdvRequest, UpdateAdvRequest, CreateAdvResponse,
                                 GetAdvResponse, SearchAdvResponse, UpdateAdvResponse, DeleteAdvResponse)
-from lifespan import lifespan
-from dependency import SessionDependency
+from db.lifespan import lifespan
+from db.dependency import SessionDependency
 from crud.crud_user import get_user_by_id, add_user
 from crud.crud_advertisement import get_adv_by_id, add_advertisement, delete_adv
 
