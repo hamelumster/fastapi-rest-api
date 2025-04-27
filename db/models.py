@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import ForeignKey, DateTime, func, Integer, String, Float, UUID
+from sqlalchemy import ForeignKey, DateTime, func, Integer, String, Float, UUID, Boolean, Column, Table
 from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -71,6 +71,41 @@ class Token(Base):
         return {
             "token": self.token,
         }
+
+
+class Right(Base):
+    __tablename__ = "rights"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    read: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    create: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    change: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    delete: Mapped[bool] = mapped_column(Boolean, nullable=False)
+
+
+class Role(Base):
+    __tablename__ = "roles"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    name: Mapped[str] = mapped_column(String, unique=True, nullable=False)
+
+    rights: Mapped[list["Right"]] = relationship(secondary="roles_rights", back_populates="role", lazy="selectin")
+
+
+roles_rights = Table(
+    "roles_rights",
+    Base.metadata,
+    Column("role_id", Integer, ForeignKey("roles.id")),
+    Column("right_id", Integer, ForeignKey("rights.id")),
+)
+
+user_roles = Table(
+    "user_roles",
+    Base.metadata,
+    Column("user_id", Integer, ForeignKey("users.id")),
+    Column("role_id", Integer, ForeignKey("roles.id")),
+)
+
 
 
 ORM_OBJ_USR = User
