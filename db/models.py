@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 
 from sqlalchemy import ForeignKey, DateTime, func, Integer, String, Float, UUID, Boolean, Column, Table
 from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine
@@ -22,10 +23,17 @@ class User(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     username: Mapped[str] = mapped_column(String, unique=True, index=True, nullable=False)
     password: Mapped[str] = mapped_column(String, nullable=False)
-    created_at: Mapped[str] = mapped_column(DateTime, server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
-    tokens: Mapped[list["Token"]] = relationship("Token", back_populates="user", lazy="selectin")
-    advertisements = relationship("Advertisement", back_populates="user")
+    tokens: Mapped[list["Token"]] = relationship(
+        "Token", back_populates="user", lazy="selectin"
+    )
+    advertisements: Mapped[list["Advertisement"]] = relationship(
+        "Advertisement", back_populates="user", lazy="selectin"
+    )
+    roles: Mapped[list["Role"]] = relationship(
+        "Role", secondary="user_roles", back_populates="users", lazy="selectin"
+    )
 
     @property
     def to_dict(self):
@@ -89,7 +97,12 @@ class Role(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String, unique=True, nullable=False)
 
-    rights: Mapped[list["Right"]] = relationship(secondary="roles_rights", back_populates="role", lazy="selectin")
+    rights: Mapped[list["Right"]] = relationship(
+        secondary="roles_rights", back_populates="role", lazy="selectin"
+    )
+    users: Mapped[list["User"]] = relationship(
+        secondary="user_roles", back_populates="roles", lazy="selectin"
+    )
 
 
 roles_rights = Table(
