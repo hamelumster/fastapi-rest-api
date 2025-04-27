@@ -33,6 +33,14 @@ async def get_user(user_id: int, session: SessionDependency):
     return user_orm_obj.to_dict
 
 
+async def delete_user(user_id: int, session: SessionDependency):
+    pass
+
+
+async def update_user():
+    pass
+
+
 @app.post("/api/v1/advertisement/",
           tags=["advertisements"],
           response_model=CreateAdvResponse)
