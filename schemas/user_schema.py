@@ -34,3 +34,7 @@ class LoginRequest(CreateUserRequest):
 
 class LoginResponse(BaseModel):
     token: uuid.UUID
+
+
+class DeleteUserResponse(SuccessUserResponse):
+    pass
