@@ -23,5 +23,9 @@ class SuccessUserResponse(BaseModel):
     status: Literal["success"]
 
 
+class LoginRequest(CreateUserRequest):
+    pass
+
+
 class LoginResponse(BaseModel):
     token: uuid.UUID
