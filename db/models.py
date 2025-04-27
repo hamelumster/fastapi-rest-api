@@ -1,4 +1,6 @@
-from sqlalchemy import ForeignKey, DateTime, func, Integer, String, Float
+import uuid
+
+from sqlalchemy import ForeignKey, DateTime, func, Integer, String, Float, UUID
 from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -22,6 +24,7 @@ class User(Base):
     password: Mapped[str] = mapped_column(String, nullable=False)
     created_at: Mapped[str] = mapped_column(DateTime, server_default=func.now())
 
+    tokens = Mapped[list["Token"]] = relationship("Token", back_populates="user", lazy="selectin")
     advertisements = relationship("Advertisement", back_populates="user")
 
     @property
@@ -50,6 +53,23 @@ class Advertisement(Base):
             "price": self.price,
             "author": self.user.username if self.user else None,
             "created_at": self.created_at.isoformat(),
+        }
+
+class Token(Base):
+    __tablename__ = "tokens"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    token: Mapped[uuid.UUID] = mapped_column(UUID, unique=True,
+                                             nullable=False, server_default=func.gen_random_uuid())
+    creation_time: Mapped[str] = mapped_column(DateTime, server_default=func.now())
+
+    user = relationship("User", back_populates="tokens", lazy="selectin")
+
+    @property
+    def to_dict(self):
+        return {
+            "token": self.token,
         }
 
 
