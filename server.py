@@ -13,7 +13,7 @@ from db.lifespan import lifespan
 from db.dependency import SessionDependency
 from crud.crud_user import get_user_by_id, add_user
 from crud.crud_advertisement import get_adv_by_id, add_advertisement, delete_adv
-
+from secure.check_rights import require_role
 
 app = FastAPI(
     title="Purchase and Sale Service",
@@ -35,7 +35,10 @@ async def login(login_data: LoginRequest, session: SessionDependency):
     return token.to_dict
 
 
-@app.post("/api/v1/user/", tags=["users"], response_model=CreateUserResponse)
+@app.post("/api/v1/user/",
+          tags=["users"],
+          response_model=CreateUserResponse,
+          dependencies=[require_role()])
 async def create_user(user: CreateUserRequest, session: SessionDependency):
     user_dict = user.model_dump(exclude_unset=True)
     user_dict["password"] = hash_password(user_dict["password"])
@@ -44,7 +47,10 @@ async def create_user(user: CreateUserRequest, session: SessionDependency):
     return user_orm_obj.id_dict
 
 
-@app.get("/api/v1/user/{user_id}", tags=["users"], response_model=GetUserResponse)
+@app.get("/api/v1/user/{user_id}",
+         tags=["users"],
+         response_model=GetUserResponse,
+         dependencies=[require_role()])
 async def get_user(user_id: int, session: SessionDependency):
     user_orm_obj = await get_user_by_id(session, User, user_id)
     return user_orm_obj.to_dict
@@ -73,7 +79,8 @@ async def create_advertisement(user_id: int, adv: CreateAdvRequest, session: Ses
 
 @app.get("/api/v1/advertisement/{adv_id}",
          tags=["advertisements"],
-         response_model=GetAdvResponse)
+         response_model=GetAdvResponse,
+         dependencies=[require_role()])
 async def get_advertisement(adv_id: int, session: SessionDependency):
     adv_orm_obj = await get_adv_by_id(session, Advertisement, adv_id)
     return adv_orm_obj.to_dict
@@ -81,7 +88,8 @@ async def get_advertisement(adv_id: int, session: SessionDependency):
 
 @app.get("/api/v1/advertisement",
          tags=["advertisements"],
-         response_model=SearchAdvResponse)
+         response_model=SearchAdvResponse,
+         dependencies=[require_role()])
 async def search_advertisement(session: SessionDependency,
                                title: str = None, description: str = None,
                                price: float = None, author: str = None):
