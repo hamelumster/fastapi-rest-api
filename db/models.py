@@ -24,7 +24,7 @@ class User(Base):
     password: Mapped[str] = mapped_column(String, nullable=False)
     created_at: Mapped[str] = mapped_column(DateTime, server_default=func.now())
 
-    tokens = Mapped[list["Token"]] = relationship("Token", back_populates="user", lazy="selectin")
+    tokens: Mapped[list["Token"]] = relationship("Token", back_populates="user", lazy="selectin")
     advertisements = relationship("Advertisement", back_populates="user")
 
     @property
