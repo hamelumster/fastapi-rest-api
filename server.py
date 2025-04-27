@@ -152,25 +152,26 @@ async def search_advertisement(session: SessionDependency,
            tags=["advertisements"],
            response_model=UpdateAdvResponse)
 async def update_advertisement(adv_id: int,
-                               user_id: int,
                                adv_data: UpdateAdvRequest,
-                               session: SessionDependency):
-    # Проверка на сущестование пользователя
-    user = await get_user_by_id(session, User, user_id)
-    adv_orm_obj = await get_adv_by_id(session, Advertisement, adv_id)
+                               session: SessionDependency,
+                               current_user: User = Depends(require_role("user"))):
+    adv = await get_adv_by_id(session, Advertisement, adv_id)
 
-    if adv_orm_obj.author_id != user.id:
-        raise HTTPException(404, detail=f"User is not author of advertisement!")
+    if adv.author_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Forbidden")
 
     adv_dict = adv_data.model_dump(exclude_unset=True)
 
     if adv_dict.get("title"):
-        adv_orm_obj.title = adv_dict["title"]
+        adv.title = adv_dict["title"]
     if adv_dict.get("description"):
-        adv_orm_obj.description = adv_dict["description"]
+        adv.description = adv_dict["description"]
     if adv_dict.get("price"):
-        adv_orm_obj.price = adv_dict["price"]
-    await add_advertisement(session, adv_orm_obj)
+        adv.price = adv_dict["price"]
+
+    await session.commit()
+    await session.refresh(adv)
+
     return SUCCESS_RESPONSE
 
 
