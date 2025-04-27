@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from sqlalchemy import select
 
-from auth import hash_password, check_password
+from secure.auth import hash_password, check_password
 from constants import SUCCESS_RESPONSE
 from crud.crud_token import add_token
 from db.models import User, Advertisement, Token
