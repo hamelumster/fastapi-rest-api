@@ -1,10 +1,12 @@
 from fastapi import FastAPI, HTTPException
 from sqlalchemy import select
 
-from auth import hash_password
+from auth import hash_password, check_password
 from constants import SUCCESS_RESPONSE
-from db.models import User, Advertisement
-from schemas.user_schema import (CreateUserRequest, CreateUserResponse, GetUserResponse)
+from crud.crud_token import add_token
+from db.models import User, Advertisement, Token
+from schemas.user_schema import (CreateUserRequest, CreateUserResponse, GetUserResponse,
+                                 LoginResponse, LoginRequest)
 from schemas.adv_schema import (CreateAdvRequest, UpdateAdvRequest, CreateAdvResponse,
                                 GetAdvResponse, SearchAdvResponse, UpdateAdvResponse, DeleteAdvResponse)
 from db.lifespan import lifespan
@@ -18,6 +20,19 @@ app = FastAPI(
     description="List of advertisements",
     lifespan=lifespan
 )
+
+
+@app.post("/api/v1/login", tags=["login"], response_model=LoginResponse)
+async def login(login_data: LoginRequest, session: SessionDependency):
+    query = select(User).where(User.username == login_data.username)
+    user = await session.scalar(query)
+    if user is None:
+        raise HTTPException(401, detail="Incorrect username or password")
+    if not check_password(login_data.password, user.password):
+        raise HTTPException(401, detail="Incorrect username or password")
+    token = Token(user_id=user.id)
+    await add_token(session, token)
+    return token.to_dict
 
 
 @app.post("/api/v1/user/", tags=["users"], response_model=CreateUserResponse)
