@@ -6,12 +6,12 @@ from constants import SUCCESS_RESPONSE
 from crud.crud_token import add_token
 from db.models import User, Advertisement, Token
 from schemas.user_schema import (CreateUserRequest, CreateUserResponse, GetUserResponse,
-                                 LoginResponse, LoginRequest, UpdateUserRequest)
+                                 LoginResponse, LoginRequest, UpdateUserRequest, DeleteUserResponse)
 from schemas.adv_schema import (CreateAdvRequest, UpdateAdvRequest, CreateAdvResponse,
                                 GetAdvResponse, SearchAdvResponse, UpdateAdvResponse, DeleteAdvResponse)
 from db.lifespan import lifespan
 from db.dependency import SessionDependency
-from crud.crud_user import get_user_by_id, add_user
+from crud.crud_user import get_user_by_id, add_user, delete_user
 from crud.crud_advertisement import get_adv_by_id, add_advertisement, delete_adv
 from secure.check_rights import require_role
 
@@ -82,12 +82,19 @@ async def patch_user(
     return user_obj.to_dict
 
 
-async def delete_user(user_id: int, session: SessionDependency):
-    pass
+@app.delete("/api/v1/user/{user_id}",
+            tags=["users"],
+            response_model=DeleteUserResponse)
+async def delete_user(
+        user_id: int,
+        session: SessionDependency = Depends(),
+        current_user: User = Depends(require_role("user")),
+):
+    if user_id != current_user.id:
+        raise HTTPException(403, detail="Forbidden")
 
-
-async def update_user():
-    pass
+    await delete_user(session, user_id)
+    return SUCCESS_RESPONSE
 
 
 @app.post("/api/v1/advertisement/",
