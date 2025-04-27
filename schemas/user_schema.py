@@ -10,6 +10,11 @@ class CreateUserRequest(BaseModel):
     password: str
 
 
+class UpdateUserRequest(BaseModel):
+    username: str | None = None
+    password: str | None = None
+
+
 class CreateUserResponse(BaseModel):
     id: int
 
