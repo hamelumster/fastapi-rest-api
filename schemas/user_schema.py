@@ -1,3 +1,5 @@
+import uuid
+
 from pydantic import BaseModel
 from datetime import datetime
 from typing import Literal
@@ -19,3 +21,7 @@ class GetUserResponse(BaseModel):
 
 class SuccessUserResponse(BaseModel):
     status: Literal["success"]
+
+
+class LoginResponse(BaseModel):
+    token: uuid.UUID
