@@ -100,11 +100,13 @@ async def delete_user(
 @app.post("/api/v1/advertisement/",
           tags=["advertisements"],
           response_model=CreateAdvResponse)
-async def create_advertisement(user_id: int, adv: CreateAdvRequest, session: SessionDependency):
-    user = await get_user_by_id(session, User, user_id)
+async def create_advertisement(user_id: int,
+                               adv: CreateAdvRequest,
+                               session: SessionDependency,
+                               current_user: User = Depends(require_role("user"))):
 
     adv_dict = adv.model_dump(exclude_unset=True)
-    adv_dict["author_id"] = user.id
+    adv_dict["author_id"] = current_user.id
     adv_orm_obj = Advertisement(**adv_dict)
     await add_advertisement(session, adv_orm_obj)
     return adv_orm_obj.to_dict
