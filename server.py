@@ -177,7 +177,11 @@ async def update_advertisement(adv_id: int,
 @app.delete("/api/v1/advertisement/{adv_id}",
             tags=["advertisements"],
             response_model=DeleteAdvResponse)
-async def delete_advertisement(adv_id: int, session: SessionDependency):
+async def delete_advertisement(adv_id: int,
+                               session: SessionDependency,
+                               current_user: User = Depends(require_role("user"))):
     adv_orm_obj = await get_adv_by_id(session, Advertisement, adv_id)
+    if adv_orm_obj.author_id != current_user.id:
+        raise HTTPException(403, detail="Forbidden")
     await delete_adv(session, adv_orm_obj)
     return SUCCESS_RESPONSE
