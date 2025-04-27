@@ -76,8 +76,8 @@ class Token(Base):
 ORM_OBJ_USR = User
 ORM_OBJ_USR_CLS = type[ORM_OBJ_USR]
 
-ORM_OBJ_ADV = Advertisement
-ORM_OBJ_ADV_CLS = type[ORM_OBJ_ADV]
+ORM_OBJ = Advertisement | Token
+ORM_OBJ_CLS = type[Advertisement] | type[Token]
 
 async def init_orm():
     async with engine.begin() as conn:
