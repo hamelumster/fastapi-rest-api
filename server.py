@@ -1,12 +1,12 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from sqlalchemy import select
 
-from secure.auth import hash_password, check_password
+from secure.auth import hash_password, check_password, get_current_user
 from constants import SUCCESS_RESPONSE
 from crud.crud_token import add_token
 from db.models import User, Advertisement, Token
 from schemas.user_schema import (CreateUserRequest, CreateUserResponse, GetUserResponse,
-                                 LoginResponse, LoginRequest)
+                                 LoginResponse, LoginRequest, UpdateUserRequest)
 from schemas.adv_schema import (CreateAdvRequest, UpdateAdvRequest, CreateAdvResponse,
                                 GetAdvResponse, SearchAdvResponse, UpdateAdvResponse, DeleteAdvResponse)
 from db.lifespan import lifespan
@@ -54,6 +54,32 @@ async def create_user(user: CreateUserRequest, session: SessionDependency):
 async def get_user(user_id: int, session: SessionDependency):
     user_orm_obj = await get_user_by_id(session, User, user_id)
     return user_orm_obj.to_dict
+
+
+@app.patch("/api/v1/user/{user_id}",
+           tags=["users"],
+           response_model=GetUserResponse)
+async def patch_user(
+        user_id: int,
+        user_in: UpdateUserRequest,
+        current_user: User = Depends(require_role("user")),
+        session: SessionDependency = Depends(),
+):
+    if user_id != current_user.id:
+        raise HTTPException(403, detail="Forbidden")
+
+    user_obj = await get_user_by_id(session, User, user_id)
+
+    data = user_in.model_dump(exclude_unset=True)
+    if data.get("password"):
+        data["password"] = hash_password(data["password"])
+
+    for field, value in data.items():
+        setattr(user_obj, field, value)
+
+    await session.commit()
+    await session.refresh(user_obj)
+    return user_obj.to_dict
 
 
 async def delete_user(user_id: int, session: SessionDependency):
