@@ -26,9 +26,7 @@ app = FastAPI(
 async def login(login_data: LoginRequest, session: SessionDependency):
     query = select(User).where(User.username == login_data.username)
     user = await session.scalar(query)
-    if user is None:
-        raise HTTPException(401, detail="Incorrect username or password")
-    if not check_password(login_data.password, user.password):
+    if not user or not check_password(login_data.password, user.password):
         raise HTTPException(401, detail="Incorrect username or password")
     token = Token(user_id=user.id)
     await add_token(session, token)
@@ -38,7 +36,8 @@ async def login(login_data: LoginRequest, session: SessionDependency):
 @app.post("/api/v1/user/",
           tags=["users"],
           response_model=CreateUserResponse,
-          dependencies=[require_role()])
+          dependencies=[require_role()]
+)
 async def create_user(user: CreateUserRequest, session: SessionDependency):
     user_dict = user.model_dump(exclude_unset=True)
     user_dict["password"] = hash_password(user_dict["password"])
@@ -50,7 +49,8 @@ async def create_user(user: CreateUserRequest, session: SessionDependency):
 @app.get("/api/v1/user/{user_id}",
          tags=["users"],
          response_model=GetUserResponse,
-         dependencies=[require_role()])
+         dependencies=[require_role()]
+)
 async def get_user(user_id: int, session: SessionDependency):
     user_orm_obj = await get_user_by_id(session, User, user_id)
     return user_orm_obj.to_dict
@@ -58,7 +58,8 @@ async def get_user(user_id: int, session: SessionDependency):
 
 @app.patch("/api/v1/user/{user_id}",
            tags=["users"],
-           response_model=GetUserResponse)
+           response_model=GetUserResponse
+)
 async def patch_user(
         user_id: int,
         user_in: UpdateUserRequest,
@@ -84,7 +85,8 @@ async def patch_user(
 
 @app.delete("/api/v1/user/{user_id}",
             tags=["users"],
-            response_model=DeleteUserResponse)
+            response_model=DeleteUserResponse
+)
 async def delete_user(
         user_id: int,
         session: SessionDependency = Depends(),
@@ -99,7 +101,8 @@ async def delete_user(
 
 @app.post("/api/v1/advertisement/",
           tags=["advertisements"],
-          response_model=CreateAdvResponse)
+          response_model=CreateAdvResponse
+)
 async def create_advertisement(adv: CreateAdvRequest,
                                session: SessionDependency,
                                current_user: User = Depends(require_role("user"))
@@ -114,7 +117,8 @@ async def create_advertisement(adv: CreateAdvRequest,
 @app.get("/api/v1/advertisement/{adv_id}",
          tags=["advertisements"],
          response_model=GetAdvResponse,
-         dependencies=[require_role()])
+         dependencies=[require_role()]
+)
 async def get_advertisement(adv_id: int, session: SessionDependency):
     adv_orm_obj = await get_adv_by_id(session, Advertisement, adv_id)
     return adv_orm_obj.to_dict
@@ -123,7 +127,8 @@ async def get_advertisement(adv_id: int, session: SessionDependency):
 @app.get("/api/v1/advertisement",
          tags=["advertisements"],
          response_model=SearchAdvResponse,
-         dependencies=[require_role()])
+         dependencies=[require_role()]
+)
 async def search_advertisement(session: SessionDependency,
                                title: str = None, description: str = None,
                                price: float = None, author: str = None):
@@ -149,7 +154,8 @@ async def search_advertisement(session: SessionDependency,
 
 @app.patch("/api/v1/advertisement/{adv_id}",
            tags=["advertisements"],
-           response_model=UpdateAdvResponse)
+           response_model=UpdateAdvResponse
+)
 async def update_advertisement(adv_id: int,
                                adv_data: UpdateAdvRequest,
                                session: SessionDependency,
@@ -176,7 +182,8 @@ async def update_advertisement(adv_id: int,
 
 @app.delete("/api/v1/advertisement/{adv_id}",
             tags=["advertisements"],
-            response_model=DeleteAdvResponse)
+            response_model=DeleteAdvResponse
+)
 async def delete_advertisement(adv_id: int,
                                session: SessionDependency,
                                current_user: User = Depends(require_role("user"))):
