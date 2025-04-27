@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from sqlalchemy import select
 
+from auth import hash_password
 from constants import SUCCESS_RESPONSE
 from db.models import User, Advertisement
 from schemas.user_schema import (CreateUserRequest, CreateUserResponse, GetUserResponse)
@@ -22,6 +23,7 @@ app = FastAPI(
 @app.post("/api/v1/user/", tags=["users"], response_model=CreateUserResponse)
 async def create_user(user: CreateUserRequest, session: SessionDependency):
     user_dict = user.model_dump(exclude_unset=True)
+    user_dict["password"] = hash_password(user_dict["password"])
     user_orm_obj = User(**user_dict)
     await add_user(session, user_orm_obj)
     return user_orm_obj.id_dict
