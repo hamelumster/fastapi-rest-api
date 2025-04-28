@@ -36,8 +36,7 @@ async def login(login_data: LoginRequest, session: SessionDependency):
 
 @app.post("/api/v1/user/",
           tags=["users"],
-          response_model=CreateUserResponse,
-          dependencies=[require_role()]
+          response_model=CreateUserResponse
 )
 async def create_user(user: CreateUserRequest, session: SessionDependency):
     user_dict = user.model_dump(exclude_unset=True)
