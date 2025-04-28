@@ -63,8 +63,8 @@ async def get_user(user_id: int, session: SessionDependency):
 async def patch_user(
         user_id: int,
         user_in: UpdateUserRequest,
+        session: SessionDependency,
         current_user: User = Depends(require_role("user")),
-        session: SessionDependency = Depends(),
 ):
     if user_id != current_user.id:
         raise HTTPException(403, detail="Forbidden")
@@ -89,7 +89,7 @@ async def patch_user(
 )
 async def delete_user(
         user_id: int,
-        session: SessionDependency = Depends(),
+        session: SessionDependency,
         current_user: User = Depends(require_role("user")),
 ):
     if user_id != current_user.id:
