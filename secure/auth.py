@@ -19,8 +19,8 @@ def check_password(password: str, password_hashed: str) -> bool:
 
 
 async def get_current_user(
-        authorization: str | None = Header(None),
-        session: SessionDependency = Depends(),
+        session: SessionDependency,
+        authorization: str | None = Header(None)
 ) -> User | None:
     if not authorization:
         return None
