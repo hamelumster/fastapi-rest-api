@@ -15,4 +15,4 @@ def require_role(*allowed_roles: str):
             return current_user
         raise HTTPException(403, detail="Not enough permissions")
 
-    return Depends(dependency)
+    return dependency
