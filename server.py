@@ -123,8 +123,7 @@ async def get_advertisement(adv_id: int, session: SessionDependency):
 
 @app.get("/api/v1/advertisement",
          tags=["advertisements"],
-         response_model=SearchAdvResponse,
-         dependencies=[require_role()]
+         response_model=SearchAdvResponse
 )
 async def search_advertisement(session: SessionDependency,
                                title: str = None, description: str = None,
