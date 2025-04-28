@@ -24,11 +24,10 @@ app = FastAPI(
 
 @app.post("/api/v1/login", tags=["login"], response_model=LoginResponse)
 async def login(login_data: LoginRequest, session: SessionDependency):
-    result = await session.scalars(select(User).where(User.username == login_data.username))
-    user = result.scalar_one_or_none()
+    stmt = select(User).where(User.username == login_data.username)
+    user = (await session.scalars(stmt)).scalar_one_or_none()
     if not user or not check_password(login_data.password, user.password):
         raise HTTPException(401, "Incorrect username or password")
-
     token = Token(user_id=user.id)
     await add_token(session, token)
     return token.to_dict
