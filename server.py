@@ -47,8 +47,7 @@ async def create_user(user: CreateUserRequest, session: SessionDependency):
 
 @app.get("/api/v1/user/{user_id}",
          tags=["users"],
-         response_model=GetUserResponse,
-         dependencies=[require_role()]
+         response_model=GetUserResponse
 )
 async def get_user(user_id: int, session: SessionDependency):
     user_orm_obj = await get_user_by_id(session, User, user_id)
@@ -115,8 +114,7 @@ async def create_advertisement(adv: CreateAdvRequest,
 
 @app.get("/api/v1/advertisement/{adv_id}",
          tags=["advertisements"],
-         response_model=GetAdvResponse,
-         dependencies=[require_role()]
+         response_model=GetAdvResponse
 )
 async def get_advertisement(adv_id: int, session: SessionDependency):
     adv_orm_obj = await get_adv_by_id(session, Advertisement, adv_id)
