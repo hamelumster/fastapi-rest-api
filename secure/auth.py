@@ -18,5 +18,5 @@ def check_password(password: str, password_hashed: str) -> bool:
     return bcrypt.checkpw(password, password_hashed)
 
 
-async def get_current_user(token: Token = TokenDependency) -> User:
+async def get_current_user(token: TokenDependency) -> User:
     return token.user
