@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import FastAPI, HTTPException, Depends
 from sqlalchemy import select
 
@@ -21,6 +23,8 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+required_role_user = require_role("user")
+USER_ROLE = Annotated[User, Depends(required_role_user)]
 
 @app.post("/api/v1/login", tags=["login"], response_model=LoginResponse)
 async def login(login_data: LoginRequest, session: SessionDependency):
@@ -35,8 +39,7 @@ async def login(login_data: LoginRequest, session: SessionDependency):
 
 @app.post("/api/v1/user/",
           tags=["users"],
-          response_model=CreateUserResponse
-)
+          response_model=CreateUserResponse)
 async def create_user(user: CreateUserRequest, session: SessionDependency):
     user_dict = user.model_dump(exclude_unset=True)
     user_dict["password"] = hash_password(user_dict["password"])
@@ -47,8 +50,7 @@ async def create_user(user: CreateUserRequest, session: SessionDependency):
 
 @app.get("/api/v1/user/{user_id}",
          tags=["users"],
-         response_model=GetUserResponse
-)
+         response_model=GetUserResponse)
 async def get_user(user_id: int, session: SessionDependency):
     user_orm_obj = await get_user_by_id(session, User, user_id)
     return user_orm_obj.to_dict
@@ -56,13 +58,12 @@ async def get_user(user_id: int, session: SessionDependency):
 
 @app.patch("/api/v1/user/{user_id}",
            tags=["users"],
-           response_model=GetUserResponse
-)
+           response_model=GetUserResponse)
 async def patch_user(
         user_id: int,
         user_in: UpdateUserRequest,
         session: SessionDependency,
-        current_user: User = Depends(require_role("user")),
+        current_user: USER_ROLE
 ):
     if user_id != current_user.id:
         raise HTTPException(403, detail="Forbidden")
@@ -83,12 +84,11 @@ async def patch_user(
 
 @app.delete("/api/v1/user/{user_id}",
             tags=["users"],
-            response_model=DeleteUserResponse
-)
+            response_model=DeleteUserResponse)
 async def delete_user(
         user_id: int,
         session: SessionDependency,
-        current_user: User = Depends(require_role("user")),
+        current_user: USER_ROLE
 ):
     if user_id != current_user.id:
         raise HTTPException(403, detail="Forbidden")
@@ -99,12 +99,10 @@ async def delete_user(
 
 @app.post("/api/v1/advertisement/",
           tags=["advertisements"],
-          response_model=CreateAdvResponse
-)
+          response_model=CreateAdvResponse)
 async def create_advertisement(adv: CreateAdvRequest,
                                session: SessionDependency,
-                               current_user: User = Depends(require_role("user"))
-):
+                               current_user: USER_ROLE):
     adv_dict = adv.model_dump(exclude_unset=True)
     adv_dict["author_id"] = current_user.id
     adv_orm_obj = Advertisement(**adv_dict)
@@ -114,8 +112,7 @@ async def create_advertisement(adv: CreateAdvRequest,
 
 @app.get("/api/v1/advertisement/{adv_id}",
          tags=["advertisements"],
-         response_model=GetAdvResponse
-)
+         response_model=GetAdvResponse)
 async def get_advertisement(adv_id: int, session: SessionDependency):
     adv_orm_obj = await get_adv_by_id(session, Advertisement, adv_id)
     return adv_orm_obj.to_dict
@@ -123,8 +120,7 @@ async def get_advertisement(adv_id: int, session: SessionDependency):
 
 @app.get("/api/v1/advertisement",
          tags=["advertisements"],
-         response_model=SearchAdvResponse
-)
+         response_model=SearchAdvResponse)
 async def search_advertisement(session: SessionDependency,
                                title: str = None, description: str = None,
                                price: float = None, author: str = None):
@@ -150,12 +146,11 @@ async def search_advertisement(session: SessionDependency,
 
 @app.patch("/api/v1/advertisement/{adv_id}",
            tags=["advertisements"],
-           response_model=UpdateAdvResponse
-)
+           response_model=UpdateAdvResponse)
 async def update_advertisement(adv_id: int,
                                adv_data: UpdateAdvRequest,
                                session: SessionDependency,
-                               current_user: User = Depends(require_role("user"))):
+                               current_user: USER_ROLE):
     adv = await get_adv_by_id(session, Advertisement, adv_id)
 
     if adv.author_id != current_user.id:
@@ -178,11 +173,10 @@ async def update_advertisement(adv_id: int,
 
 @app.delete("/api/v1/advertisement/{adv_id}",
             tags=["advertisements"],
-            response_model=DeleteAdvResponse
-)
+            response_model=DeleteAdvResponse)
 async def delete_advertisement(adv_id: int,
                                session: SessionDependency,
-                               current_user: User = Depends(require_role("user"))):
+                               current_user: USER_ROLE):
     adv_orm_obj = await get_adv_by_id(session, Advertisement, adv_id)
     if adv_orm_obj.author_id != current_user.id:
         raise HTTPException(403, detail="Forbidden")
