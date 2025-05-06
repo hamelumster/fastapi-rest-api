@@ -90,6 +90,9 @@ class Right(Base):
     change: Mapped[bool] = mapped_column(Boolean, nullable=False)
     delete: Mapped[bool] = mapped_column(Boolean, nullable=False)
 
+    roles: Mapped[list["Role"]] = relationship(
+        secondary="roles_rights", back_populates="rights", lazy="selectin"
+    )
 
 class Role(Base):
     __tablename__ = "roles"
@@ -98,7 +101,7 @@ class Role(Base):
     name: Mapped[str] = mapped_column(String, unique=True, nullable=False)
 
     rights: Mapped[list["Right"]] = relationship(
-        secondary="roles_rights", back_populates="role", lazy="selectin"
+        secondary="roles_rights", back_populates="roles", lazy="selectin"
     )
     users: Mapped[list["User"]] = relationship(
         secondary="user_roles", back_populates="roles", lazy="selectin"
