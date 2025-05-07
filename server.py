@@ -26,10 +26,13 @@ app = FastAPI(
 required_role_user = require_role("user")
 USER_ROLE = Annotated[User, Depends(required_role_user)]
 
+required_role_admin = require_role("admin")
+ADMIN_ROLE = Annotated[User, Depends(required_role_admin)]
+
 @app.post("/api/v1/login", tags=["login"], response_model=LoginResponse)
 async def login(login_data: LoginRequest, session: SessionDependency):
     stmt = select(User).where(User.username == login_data.username)
-    user = (await session.scalars(stmt)).scalar_one_or_none()
+    user = await session.scalar(stmt)
     if not user or not check_password(login_data.password, user.password):
         raise HTTPException(401, "Incorrect username or password")
     token = Token(user_id=user.id)
@@ -65,8 +68,11 @@ async def patch_user(
         session: SessionDependency,
         current_user: USER_ROLE
 ):
+    r_names = [r.name for r in current_user.roles]
+
     if user_id != current_user.id:
-        raise HTTPException(403, detail="Forbidden")
+        if "admin" not in r_names:
+            raise HTTPException(403, detail="Forbidden")
 
     user_obj = await get_user_by_id(session, User, user_id)
 
