@@ -188,7 +188,9 @@ async def delete_advertisement(adv_id: int,
                                session: SessionDependency,
                                current_user: USER_ROLE):
     adv_orm_obj = await get_adv_by_id(session, Advertisement, adv_id)
+
     if adv_orm_obj.author_id != current_user.id:
-        raise HTTPException(403, detail="Forbidden")
+        if not any(r.name == "admin" for r in current_user.roles):
+            raise HTTPException(403, detail="Forbidden")
     await delete_adv(session, adv_orm_obj)
     return SUCCESS_RESPONSE
