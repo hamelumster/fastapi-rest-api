@@ -162,7 +162,8 @@ async def update_advertisement(adv_id: int,
                                current_user: USER_ROLE):
     adv = await get_adv_by_id(session, Advertisement, adv_id)
 
-    if adv.author_id != current_user.id:
+    r_names = [r.name for r in current_user.roles]
+    if adv.author_id != current_user.id and "admin" not in r_names:
         raise HTTPException(status_code=403, detail="Forbidden")
 
     adv_dict = adv_data.model_dump(exclude_unset=True)
