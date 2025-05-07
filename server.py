@@ -96,8 +96,11 @@ async def delete_user(
         session: SessionDependency,
         current_user: USER_ROLE
 ):
+    r_names = [r.name for r in current_user.roles]
+
     if user_id != current_user.id:
-        raise HTTPException(403, detail="Forbidden")
+        if "admin" not in r_names:
+            raise HTTPException(403, detail="Forbidden")
 
     await delete_user(session, user_id)
     return SUCCESS_RESPONSE
