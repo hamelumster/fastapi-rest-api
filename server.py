@@ -6,14 +6,15 @@ from sqlalchemy import select
 from secure.auth import hash_password, check_password, get_current_user
 from constants import SUCCESS_RESPONSE
 from crud.crud_token import add_token
-from db.models import User, Advertisement, Token
+from db.models import User, Advertisement, Token, Role
 from schemas.user_schema import (CreateUserRequest, CreateUserResponse, GetUserResponse,
                                  LoginResponse, LoginRequest, UpdateUserRequest, DeleteUserResponse)
 from schemas.adv_schema import (CreateAdvRequest, UpdateAdvRequest, CreateAdvResponse,
                                 GetAdvResponse, SearchAdvResponse, UpdateAdvResponse, DeleteAdvResponse)
 from db.lifespan import lifespan
 from db.dependency import SessionDependency
-from crud.crud_user import get_user_by_id, add_user, delete_user
+from crud.crud_user import get_user_by_id, add_user
+from crud.crud_user import delete_user as crud_delete_user
 from crud.crud_advertisement import get_adv_by_id, add_advertisement, delete_adv
 from secure.check_rights import require_role
 
@@ -47,6 +48,8 @@ async def create_user(user: CreateUserRequest, session: SessionDependency):
     user_dict = user.model_dump(exclude_unset=True)
     user_dict["password"] = hash_password(user_dict["password"])
     user_orm_obj = User(**user_dict)
+    role_user = await session.scalar(select(Role).where(Role.name == "user"))
+    user_orm_obj.roles.append(role_user)
     await add_user(session, user_orm_obj)
     return user_orm_obj.id_dict
 
@@ -102,7 +105,9 @@ async def delete_user(
         if "admin" not in r_names:
             raise HTTPException(403, detail="Forbidden")
 
-    await delete_user(session, user_id)
+    user_obj = await get_user_by_id(session, User, user_id)
+
+    await crud_delete_user(session, user_obj)
     return SUCCESS_RESPONSE
 
 
