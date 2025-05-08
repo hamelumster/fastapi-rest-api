@@ -26,13 +26,22 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
     tokens: Mapped[list["Token"]] = relationship(
-        "Token", back_populates="user", lazy="selectin"
+        "Token",
+        back_populates="user",
+        lazy="selectin",
+        cascade="all, delete-orphan"
     )
     advertisements: Mapped[list["Advertisement"]] = relationship(
-        "Advertisement", back_populates="user", lazy="selectin"
+        "Advertisement",
+        back_populates="user",
+        lazy="selectin",
+        cascade="all, delete-orphan"
     )
     roles: Mapped[list["Role"]] = relationship(
-        "Role", secondary="user_roles", back_populates="users", lazy="selectin"
+        "Role",
+        secondary="user_roles",
+        back_populates="users",
+        lazy="selectin"
     )
 
     @property
@@ -47,7 +56,7 @@ class Advertisement(Base):
     title: Mapped[str] = mapped_column(String, index=True, nullable=False)
     description: Mapped[str] = mapped_column(String, nullable=False)
     price: Mapped[float] = mapped_column(Float, nullable=False)
-    author_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    author_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     created_at: Mapped[str] = mapped_column(DateTime, server_default=func.now())
 
     user = relationship("User", back_populates="advertisements", lazy="selectin")
@@ -67,7 +76,7 @@ class Token(Base):
     __tablename__ = "tokens"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     token: Mapped[uuid.UUID] = mapped_column(UUID, unique=True,
                                              nullable=False, server_default=func.gen_random_uuid())
     creation_time: Mapped[str] = mapped_column(DateTime, server_default=func.now())
