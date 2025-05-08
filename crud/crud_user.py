@@ -19,7 +19,7 @@ async def get_user_by_id(session: AsyncSession, user_orm_cls: ORM_OBJ_USR_CLS, u
         raise HTTPException(404, detail="User not found")
     return user_orm_obj
 
-async def delete_user(session: AsyncSession, adv: ORM_OBJ_USR_CLS):
-    await session.delete(adv)
+async def delete_user(session: AsyncSession, user: ORM_OBJ_USR_CLS):
+    await session.delete(user)
     await session.commit()
 
