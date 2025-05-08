@@ -1,16 +1,22 @@
-from fastapi import FastAPI, HTTPException
+from typing import Annotated
+
+from fastapi import FastAPI, HTTPException, Depends
 from sqlalchemy import select
 
+from secure.auth import hash_password, check_password, get_current_user
 from constants import SUCCESS_RESPONSE
-from db.models import User, Advertisement
-from schemas.user_schema import (CreateUserRequest, CreateUserResponse, GetUserResponse)
+from crud.crud_token import add_token
+from db.models import User, Advertisement, Token, Role
+from schemas.user_schema import (CreateUserRequest, CreateUserResponse, GetUserResponse,
+                                 LoginResponse, LoginRequest, UpdateUserRequest, DeleteUserResponse)
 from schemas.adv_schema import (CreateAdvRequest, UpdateAdvRequest, CreateAdvResponse,
                                 GetAdvResponse, SearchAdvResponse, UpdateAdvResponse, DeleteAdvResponse)
 from db.lifespan import lifespan
 from db.dependency import SessionDependency
 from crud.crud_user import get_user_by_id, add_user
+from crud.crud_user import delete_user as crud_delete_user
 from crud.crud_advertisement import get_adv_by_id, add_advertisement, delete_adv
-
+from secure.check_rights import require_role
 
 app = FastAPI(
     title="Purchase and Sale Service",
@@ -18,29 +24,101 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+required_role_user = require_role("user")
+USER_ROLE = Annotated[User, Depends(required_role_user)]
 
-@app.post("/api/v1/user/", tags=["users"], response_model=CreateUserResponse)
+required_role_admin = require_role("admin")
+ADMIN_ROLE = Annotated[User, Depends(required_role_admin)]
+
+@app.post("/api/v1/login", tags=["login"], response_model=LoginResponse)
+async def login(login_data: LoginRequest, session: SessionDependency):
+    stmt = select(User).where(User.username == login_data.username)
+    user = await session.scalar(stmt)
+    if not user or not check_password(login_data.password, user.password):
+        raise HTTPException(401, "Incorrect username or password")
+    token = Token(user_id=user.id)
+    await add_token(session, token)
+    return token.to_dict
+
+
+@app.post("/api/v1/user/",
+          tags=["users"],
+          response_model=CreateUserResponse)
 async def create_user(user: CreateUserRequest, session: SessionDependency):
     user_dict = user.model_dump(exclude_unset=True)
+    user_dict["password"] = hash_password(user_dict["password"])
     user_orm_obj = User(**user_dict)
+    role_user = await session.scalar(select(Role).where(Role.name == "user"))
+    user_orm_obj.roles.append(role_user)
     await add_user(session, user_orm_obj)
     return user_orm_obj.id_dict
 
 
-@app.get("/api/v1/user/{user_id}", tags=["users"], response_model=GetUserResponse)
+@app.get("/api/v1/user/{user_id}",
+         tags=["users"],
+         response_model=GetUserResponse)
 async def get_user(user_id: int, session: SessionDependency):
     user_orm_obj = await get_user_by_id(session, User, user_id)
     return user_orm_obj.to_dict
 
 
+@app.patch("/api/v1/user/{user_id}",
+           tags=["users"],
+           response_model=GetUserResponse)
+async def patch_user(
+        user_id: int,
+        user_in: UpdateUserRequest,
+        session: SessionDependency,
+        current_user: USER_ROLE
+):
+    r_names = [r.name for r in current_user.roles]
+
+    if user_id != current_user.id:
+        if "admin" not in r_names:
+            raise HTTPException(403, detail="Forbidden")
+
+    user_obj = await get_user_by_id(session, User, user_id)
+
+    data = user_in.model_dump(exclude_unset=True)
+    if data.get("password"):
+        data["password"] = hash_password(data["password"])
+
+    for field, value in data.items():
+        setattr(user_obj, field, value)
+
+    await session.commit()
+    await session.refresh(user_obj)
+    return user_obj.to_dict
+
+
+@app.delete("/api/v1/user/{user_id}",
+            tags=["users"],
+            response_model=DeleteUserResponse)
+async def delete_user(
+        user_id: int,
+        session: SessionDependency,
+        current_user: USER_ROLE
+):
+    r_names = [r.name for r in current_user.roles]
+
+    if user_id != current_user.id:
+        if "admin" not in r_names:
+            raise HTTPException(403, detail="Forbidden")
+
+    user_obj = await get_user_by_id(session, User, user_id)
+
+    await crud_delete_user(session, user_obj)
+    return SUCCESS_RESPONSE
+
+
 @app.post("/api/v1/advertisement/",
           tags=["advertisements"],
           response_model=CreateAdvResponse)
-async def create_advertisement(user_id: int, adv: CreateAdvRequest, session: SessionDependency):
-    user = await get_user_by_id(session, User, user_id)
-
+async def create_advertisement(adv: CreateAdvRequest,
+                               session: SessionDependency,
+                               current_user: USER_ROLE):
     adv_dict = adv.model_dump(exclude_unset=True)
-    adv_dict["author_id"] = user.id
+    adv_dict["author_id"] = current_user.id
     adv_orm_obj = Advertisement(**adv_dict)
     await add_advertisement(session, adv_orm_obj)
     return adv_orm_obj.to_dict
@@ -84,32 +162,40 @@ async def search_advertisement(session: SessionDependency,
            tags=["advertisements"],
            response_model=UpdateAdvResponse)
 async def update_advertisement(adv_id: int,
-                               user_id: int,
                                adv_data: UpdateAdvRequest,
-                               session: SessionDependency):
-    # Проверка на сущестование пользователя
-    user = await get_user_by_id(session, User, user_id)
-    adv_orm_obj = await get_adv_by_id(session, Advertisement, adv_id)
+                               session: SessionDependency,
+                               current_user: USER_ROLE):
+    adv = await get_adv_by_id(session, Advertisement, adv_id)
 
-    if adv_orm_obj.author_id != user.id:
-        raise HTTPException(404, detail=f"User is not author of advertisement!")
+    r_names = [r.name for r in current_user.roles]
+    if adv.author_id != current_user.id and "admin" not in r_names:
+        raise HTTPException(status_code=403, detail="Forbidden")
 
     adv_dict = adv_data.model_dump(exclude_unset=True)
 
     if adv_dict.get("title"):
-        adv_orm_obj.title = adv_dict["title"]
+        adv.title = adv_dict["title"]
     if adv_dict.get("description"):
-        adv_orm_obj.description = adv_dict["description"]
+        adv.description = adv_dict["description"]
     if adv_dict.get("price"):
-        adv_orm_obj.price = adv_dict["price"]
-    await add_advertisement(session, adv_orm_obj)
+        adv.price = adv_dict["price"]
+
+    await session.commit()
+    await session.refresh(adv)
+
     return SUCCESS_RESPONSE
 
 
 @app.delete("/api/v1/advertisement/{adv_id}",
             tags=["advertisements"],
             response_model=DeleteAdvResponse)
-async def delete_advertisement(adv_id: int, session: SessionDependency):
+async def delete_advertisement(adv_id: int,
+                               session: SessionDependency,
+                               current_user: USER_ROLE):
     adv_orm_obj = await get_adv_by_id(session, Advertisement, adv_id)
+
+    if adv_orm_obj.author_id != current_user.id:
+        if not any(r.name == "admin" for r in current_user.roles):
+            raise HTTPException(403, detail="Forbidden")
     await delete_adv(session, adv_orm_obj)
     return SUCCESS_RESPONSE
